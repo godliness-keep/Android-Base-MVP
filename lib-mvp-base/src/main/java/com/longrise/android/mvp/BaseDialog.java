@@ -22,19 +22,17 @@ import com.longrise.android.mvp.utils.GenericUtil;
 public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialog {
 
     protected P mPresenter;
-    private Context mContext;
     private View mDecor;
 
     private final boolean mDebug = BuildConfig.DEBUG;
     private boolean mContentChanged;
 
     public BaseDialog(Context context) {
-        this(context, 0);
+        this(context, R.style.MVP_Dialog_Defalut_Style);
     }
 
     public BaseDialog(Context context, int theme) {
         super(context, theme);
-        this.mContext = context;
     }
 
     @Override
@@ -51,7 +49,7 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
     @Override
     public final void onContentChanged() {
         if (!mContentChanged) {
-            initMvpFrame();
+            buildAndInitMvpFrame();
             mContentChanged = true;
         }
     }
@@ -138,13 +136,12 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
     }
 
     @SuppressWarnings("unchecked")
-    private void initMvpFrame() {
+    private void buildAndInitMvpFrame() {
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-        }
-        if (mPresenter != null) {
-            mPresenter.mContext = mContext;
-            mPresenter.attachV(this);
+            if (mPresenter != null) {
+                mPresenter.attachV((BaseView) this);
+            }
         }
         initView();
         if (mPresenter != null) {

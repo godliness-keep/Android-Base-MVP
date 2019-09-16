@@ -7,7 +7,7 @@ import com.longrise.android.mvp.utils.GenericUtil;
  *
  * @author godliness
  */
-public abstract class BasePresenterEx<V, M> extends BasePresenter<V> {
+public abstract class BasePresenterEx<V extends BaseView, M extends BaseModel> extends BasePresenter<V> {
 
     protected final M mModal;
 
@@ -20,7 +20,7 @@ public abstract class BasePresenterEx<V, M> extends BasePresenter<V> {
         exInit();
 
         if (mModal != null) {
-            ((BaseModel) mModal).init();
+            mModal.init();
         }
     }
 

@@ -4,15 +4,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
-import com.longrise.android.mvp.internal.BaseMvpActivity;
-
 /**
  * Created by godliness on 2019-06-29.
  *
  * @author godliness
  */
 @SuppressWarnings("unused")
-public abstract class BasePresenter<V> {
+public abstract class BasePresenter<V extends BaseView> {
 
     private static final String TAG = "BasePresenter";
 
@@ -25,14 +23,21 @@ public abstract class BasePresenter<V> {
 
     /**
      * Presenter initialization is complete
-     * This method is called after {@link BaseMvpActivity#initView()}
+     * This method is called after BaseMvpActivity#initView()
      */
     public abstract void init();
 
     /**
+     * {@link Activity#isFinishing()}
+     */
+    public final boolean isFinish() {
+        return mFinished;
+    }
+
+    /**
      * Presenter has destroy
      */
-    protected abstract void destroy();
+    public abstract void destroy();
 
     public final void attachV(V v) {
         this.mView = v;
@@ -52,18 +57,11 @@ public abstract class BasePresenter<V> {
     }
 
     /**
-     * {@link Activity#isFinishing()}
-     */
-    protected final boolean isFinish() {
-        return mFinished;
-    }
-
-    /**
      * {@link com.longrise.android.mvp.BaseActivity#showLoadingStyle()}
      */
     public final void showLoadingStyle() {
         if (mView != null) {
-            ((BaseView) mView).showLoadingStyle();
+            mView.showLoadingStyle();
         }
     }
 
@@ -72,7 +70,7 @@ public abstract class BasePresenter<V> {
      */
     public final void showLoadingError() {
         if (mView != null) {
-            ((BaseView) mView).showLoadingError();
+            mView.showLoadingError();
         }
     }
 
@@ -81,7 +79,7 @@ public abstract class BasePresenter<V> {
      */
     public final void showLoadingEmpty() {
         if (mView != null) {
-            ((BaseView) mView).showLoadingEmpty();
+            mView.showLoadingEmpty();
         }
     }
 
@@ -90,8 +88,7 @@ public abstract class BasePresenter<V> {
      */
     public final void dimissLoadingStyle() {
         if (mView != null) {
-            ((BaseView) mView).dismissLoadingStyle();
+            mView.dismissLoadingStyle();
         }
     }
-
 }

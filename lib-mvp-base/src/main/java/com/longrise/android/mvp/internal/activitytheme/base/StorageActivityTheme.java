@@ -32,9 +32,9 @@ final class StorageActivityTheme {
             final LinkedList<BaseActivityTheme> activityThemes = THEMES.valueAt(i);
             final int themeSize = activityThemes.size();
             if (themeSize > 1) {
-                final BaseActivityTheme keep = activityThemes.removeLast();
+                final BaseActivityTheme preservation = activityThemes.removeLast();
                 activityThemes.clear();
-                activityThemes.add(keep);
+                activityThemes.add(preservation);
             }
         }
     }

@@ -10,7 +10,9 @@ import android.support.annotation.NonNull;
 public interface BaseModel {
 
     /**
-     * The Model is initialized，Callback in the {@link BasePresenterEx#init()} after
+     * The Model is initialized
+     * <p>
+     * This method is called after BasePresenterEx#exInit()
      */
     void init();
 

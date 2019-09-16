@@ -26,9 +26,9 @@ public class BaseMvpFragment<P extends BasePresenter> extends Fragment {
         super.onCreate(savedInstanceState);
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-        }
-        if (mPresenter != null) {
-            mPresenter.attachV(this);
+            if (mPresenter != null) {
+                mPresenter.attachV((BaseView) this);
+            }
         }
         mDestroy = false;
     }
@@ -99,7 +99,6 @@ public class BaseMvpFragment<P extends BasePresenter> extends Fragment {
 
     @Override
     public void onDestroy() {
-        notifyPresenterFinish();
         if (mPresenter != null) {
             mPresenter.detachTarget();
         }

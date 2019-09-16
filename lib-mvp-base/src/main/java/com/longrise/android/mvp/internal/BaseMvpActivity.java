@@ -1,7 +1,6 @@
 package com.longrise.android.mvp.internal;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 
@@ -29,8 +28,7 @@ public abstract class BaseMvpActivity<P extends BasePresenter> extends BaseSuper
     @Override
     public final void onContentChanged() {
         if (!mContentChanged) {
-            runOnUiThread(mFrameRunnable);
-            this.mContentChanged = true;
+            createAndInitMvpFrame();
         }
     }
 
@@ -105,21 +103,15 @@ public abstract class BaseMvpActivity<P extends BasePresenter> extends BaseSuper
     void createAndInitMvpFrame() {
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-        }
-        if (mPresenter != null) {
-            mPresenter.attachV(this);
+            if (mPresenter != null) {
+                mPresenter.attachV((BaseView) this);
+            }
         }
         initView();
         if (mPresenter != null) {
             mPresenter.init();
         }
         regEvent(true);
+        mContentChanged = true;
     }
-
-    private final Runnable mFrameRunnable = new Runnable() {
-        @Override
-        public void run() {
-            createAndInitMvpFrame();
-        }
-    };
 }

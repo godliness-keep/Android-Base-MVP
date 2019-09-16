@@ -1,6 +1,8 @@
 package com.longrise.android.mvp.internal.viewbind;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.longrise.android.mvp.BaseViewBindActivity;
 
@@ -12,6 +14,7 @@ import com.longrise.android.mvp.BaseViewBindActivity;
 @SuppressWarnings("unused")
 public abstract class BaseViewBinding<T> {
 
+    @Nullable
     private T mTarget;
     private boolean mFinished;
 
@@ -28,10 +31,12 @@ public abstract class BaseViewBinding<T> {
 
     public final void detachTarget() {
         this.mFinished = false;
+        this.mTarget = null;
         regEvent(false);
         onDestroy();
     }
 
+    @Nullable
     protected final T getTarget() {
         return mTarget;
     }
@@ -45,7 +50,7 @@ public abstract class BaseViewBinding<T> {
      *
      * @param target T
      */
-    protected abstract void bindView(T target);
+    protected abstract void bindView(@NonNull T target);
 
     /**
      * Register event

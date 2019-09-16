@@ -1,7 +1,6 @@
 package com.longrise.android.mvp.internal;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;

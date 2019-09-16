@@ -5,7 +5,7 @@ package com.longrise.android.mvp.internal.mvp;
  *
  * @author godliness
  */
-public interface BaseView<Data> {
+public interface BaseView {
 
     /**
      * Show start loading

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BaseMVP</string>
+    <string name="string_sample_title">lib-mvp-base 库测试</string>
 </resources>

@@ -22,5 +22,4 @@ public interface IActivityThemeListener {
      */
     void themeRightIconClick();
 
-
 }
