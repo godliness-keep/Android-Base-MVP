@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityManager;
@@ -17,6 +18,7 @@ import android.webkit.WebView;
 
 import com.longrise.android.mvp.utils.MvpLog;
 import com.longrise.android.web.common.SchemeConsts;
+import com.longrise.android.web.helper.WebViewDownloadHelper;
 
 import java.lang.reflect.Method;
 
@@ -38,6 +40,7 @@ public class BaseWebView extends WebView implements DownloadListener {
             "android.webkit.WebViewFactory$MissingWebViewPackageException: Failed to load WebView provider: No WebView installed"};
 
     private IScrollChangeListener mScrollListener;
+    private WebViewDownloadHelper mDownloadHelper;
 
     public BaseWebView(Context context) {
         this(context, null);
@@ -49,6 +52,7 @@ public class BaseWebView extends WebView implements DownloadListener {
         removeJavascriptInterfaces();
         disableAccessibility(context);
         MvpLog.e(TAG, "new BaseWebView");
+
     }
 
     @Nullable
@@ -73,6 +77,7 @@ public class BaseWebView extends WebView implements DownloadListener {
     @Override
     public void addJavascriptInterface(Object object, String name) {
         super.addJavascriptInterface(object, name);
+        MvpLog.e(TAG, "bridge name: " + name);
     }
 
     @Override
@@ -167,12 +172,22 @@ public class BaseWebView extends WebView implements DownloadListener {
         } else {
             destroy();
         }
+
+        if(mDownloadHelper != null){
+            mDownloadHelper.uninstallDownloadHelper();
+        }
+        mDownloadHelper = null;
+
         MvpLog.e(TAG, "recycle: " + recycled);
     }
 
     @Override
     public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-        MvpLog.e(TAG, "onDownloadStart url: " + url);
+        if(mDownloadHelper == null){
+            mDownloadHelper = WebViewDownloadHelper.installDownloadHelper(getContext());
+        }
+        mDownloadHelper.addDownloadTask(url, contentDisposition);
+        MvpLog.e(TAG, "onDownloadStart url: " + url + " userAgent: " + userAgent + " contentDisposition: " + contentDisposition + " mimitype: " + mimetype);
     }
 
     @TargetApi(11)
@@ -217,7 +232,6 @@ public class BaseWebView extends WebView implements DownloadListener {
     }
 
     private void release() {
-        loadUrl(SchemeConsts.BLANK);
         final ViewParent viewParent = getParent();
         if (viewParent instanceof ViewGroup) {
             ((ViewGroup) viewParent).removeView(this);

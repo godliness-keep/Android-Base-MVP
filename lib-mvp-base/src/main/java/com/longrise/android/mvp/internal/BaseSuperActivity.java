@@ -42,7 +42,6 @@ abstract class BaseSuperActivity extends AppCompatActivity {
      * Set the status bar color, default empty implementation
      */
     protected void resetStatusBarColor() {
-
     }
 
     /**

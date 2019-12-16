@@ -87,6 +87,7 @@ public final class SettingInit {
         }
     }
 
+
     private SettingInit() {
         throw new InstantiationError();
     }

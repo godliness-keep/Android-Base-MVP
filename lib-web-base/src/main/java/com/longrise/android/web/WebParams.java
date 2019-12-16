@@ -16,7 +16,7 @@ import android.support.annotation.StringRes;
 @SuppressWarnings("unused")
 public final class WebParams implements Parcelable {
 
-    static final String WEB_PARAMS_EXTRA = "web_params_extra";
+    public static final String WEB_PARAMS_EXTRA = "web_params_extra";
 
     private int mThemeBackIcon;
     private int mThemeCloseIcon;
@@ -26,12 +26,6 @@ public final class WebParams implements Parcelable {
 
     public static WebParams obtain() {
         return new WebParams();
-    }
-
-    public void enter(Context context, Class<? extends BaseWebActivity> webClass) {
-        final Intent intent = new Intent(context, webClass);
-        intent.putExtra(WEB_PARAMS_EXTRA, this);
-        context.startActivity(intent);
     }
 
     public String path() {

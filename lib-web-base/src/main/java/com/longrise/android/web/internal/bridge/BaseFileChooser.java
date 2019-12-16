@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -31,10 +32,18 @@ public class BaseFileChooser<T extends BaseWebActivity> {
     private Handler mHandler;
 
     private ValueCallback<Uri> mUploadFile;
-    private ValueCallback<Uri[]> mFilePathCallback5;
+    private ValueCallback<Uri[]> mFilePathCallback;
 
     public BaseFileChooser() {
 
+    }
+
+    public void onHandleMessage(Message msg) {
+
+    }
+
+    protected boolean dispatchActivityOnResult(int requestCode, int resultCode, Intent data) {
+        return false;
     }
 
     public final void attachTarget(T target) {
@@ -47,57 +56,56 @@ public class BaseFileChooser<T extends BaseWebActivity> {
     }
 
     protected final boolean isFinishing() {
-        return ActivityState.isAlive(mTarget.get());
+        final boolean isAlive = ActivityState.isAlive(mTarget.get());
+        if (!isAlive) {
+            mHandler.removeCallbacksAndMessages(null);
+        }
+        return !isAlive;
     }
 
     protected final Handler getHandler() {
         return mHandler;
     }
 
-    protected boolean dispatchActivityOnResult(int requestCode, int resultCode, Intent data) {
-        return false;
+    protected final void post(Runnable action) {
+        postDelayed(action, 0);
+    }
+
+    protected final void postDelayed(Runnable action, int delay) {
+        if (!isFinishing()) {
+            mHandler.postDelayed(action, delay);
+        }
     }
 
     /**
      * {@link BaseWebActivity#onActivityResult(int, int, Intent)}
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public final void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        if (isFinishing() || data == null) {
-            performEnd();
+        if (isFinishing() || data == null || dispatchActivityOnResult(requestCode, resultCode, data)) {
+            onReceiveValueEnd();
             return;
         }
-        switch (requestCode) {
-            case REQUEST_CODE_VERSION_LESS_LOLLIPOP:
-                if (mUploadFile != null) {
-                    mUploadFile.onReceiveValue(resultCode == Activity.RESULT_OK ? data.getData() : null);
-                    mUploadFile = null;
-                }
-                break;
-
-            case REQUEST_CODE_VERSION_LOLLIPOP:
-                if (mFilePathCallback5 != null) {
-                    mFilePathCallback5.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
-                    mFilePathCallback5 = null;
-                }
-                break;
-
-            default:
-                if (!dispatchActivityOnResult(requestCode, resultCode, data)) {
-                    performEnd();
-                }
-                break;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            if (mUploadFile != null) {
+                mUploadFile.onReceiveValue(resultCode == Activity.RESULT_OK ? data.getData() : null);
+                mUploadFile = null;
+            }
+        } else {
+            if (mFilePathCallback != null) {
+                mFilePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                mFilePathCallback = null;
+            }
         }
     }
 
-    protected final void performEnd() {
+    protected final void onReceiveValueEnd() {
         if (mUploadFile != null) {
             mUploadFile.onReceiveValue(null);
             mUploadFile = null;
         }
-        if (mFilePathCallback5 != null) {
-            mFilePathCallback5.onReceiveValue(null);
-            mFilePathCallback5 = null;
+        if (mFilePathCallback != null) {
+            mFilePathCallback.onReceiveValue(null);
+            mFilePathCallback = null;
         }
     }
 
@@ -105,10 +113,10 @@ public class BaseFileChooser<T extends BaseWebActivity> {
      * For Android Version < 5.0  todo 4.4版本是个bug
      */
     final void openFileChooser(ValueCallback<Uri> uploadFile, String acceptType, String capture) {
-        MvpLog.e(TAG, "acceptType: " + acceptType + " capture: " + capture);
         if (isFinishing()) {
             return;
         }
+        onReceiveValueEnd();
         this.mUploadFile = uploadFile;
         final Intent target = new Intent(Intent.ACTION_GET_CONTENT);
         target.addCategory(Intent.CATEGORY_OPENABLE);
@@ -116,7 +124,7 @@ public class BaseFileChooser<T extends BaseWebActivity> {
         try {
             getTarget().startActivityForResult(Intent.createChooser(target, "File Browser"), REQUEST_CODE_VERSION_LESS_LOLLIPOP);
         } catch (Exception e) {
-            performEnd();
+            onReceiveValueEnd();
             MvpLog.print(e);
         }
     }
@@ -129,12 +137,13 @@ public class BaseFileChooser<T extends BaseWebActivity> {
         if (isFinishing()) {
             return;
         }
-        this.mFilePathCallback5 = filePathCallback;
-        final Intent intent = fileChooserParams.createIntent();
+        onReceiveValueEnd();
+        this.mFilePathCallback = filePathCallback;
         try {
+            final Intent intent = fileChooserParams.createIntent();
             getTarget().startActivityForResult(intent, REQUEST_CODE_VERSION_LOLLIPOP);
         } catch (Exception e) {
-            performEnd();
+            onReceiveValueEnd();
             MvpLog.print(e);
         }
     }

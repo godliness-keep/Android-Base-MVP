@@ -1,6 +1,8 @@
 package com.longrise.android.mvp.internal.loadstyle;
 
 
+import android.view.ViewGroup;
+
 import com.longrise.android.mvp.internal.loadstyle.base.BaseLoadStyle;
 import com.longrise.android.mvp.internal.loadstyle.base.ILoadStyleListener;
 

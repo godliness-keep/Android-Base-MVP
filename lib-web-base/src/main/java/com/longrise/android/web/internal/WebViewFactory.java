@@ -2,6 +2,9 @@ package com.longrise.android.web.internal;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatDelegate;
+import android.webkit.WebView;
 
 import com.longrise.android.mvp.utils.MvpLog;
 
@@ -14,21 +17,29 @@ import java.util.LinkedList;
  */
 final class WebViewFactory {
 
+    private static final String TAG = "WebViewFactory";
+
     private static final int MAX_CACHE_SIZE = 2;
     private static final LinkedList<BaseWebView> WEB_VIEWS = new LinkedList<>();
 
+    @Nullable
     static BaseWebView findWebView(@NonNull Context context) {
+        BaseWebView webView = null;
         synchronized (WEB_VIEWS) {
             if (WEB_VIEWS.size() > 0) {
-                return WEB_VIEWS.removeFirst();
+                webView = WEB_VIEWS.removeFirst();
+                int size = webView.copyBackForwardList().getSize();
+                MvpLog.e(TAG, "size: " + size + " url: " + webView.getOriginalUrl());
             }
         }
-        try {
-            return new BaseWebView(context.getApplicationContext());
-        } catch (Exception e) {
-            MvpLog.print(e);
+        if (webView == null) {
+            try {
+                return new BaseWebView(context.getApplicationContext());
+            } catch (Exception e) {
+                MvpLog.print(e);
+            }
         }
-        return null;
+        return webView;
     }
 
     static boolean recycle(BaseWebView webView) {
@@ -42,6 +53,6 @@ final class WebViewFactory {
     }
 
     private WebViewFactory() {
-        throw new InstantiationError();
+        throw new InstantiationError("WebViewFactory Cannot be initialized");
     }
 }

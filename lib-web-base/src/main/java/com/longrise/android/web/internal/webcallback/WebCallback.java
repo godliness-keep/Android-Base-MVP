@@ -1,7 +1,5 @@
 package com.longrise.android.web.internal.webcallback;
 
-import android.net.Uri;
-
 /**
  * Created by godliness on 2019-07-09.
  *
@@ -32,19 +30,19 @@ public interface WebCallback {
         /**
          * Loading the page
          */
-        void loadingPage();
+        void loadedSuccess();
 
         /**
          * Page loading error
          */
-        void loadingError();
+        void loadedError();
 
         /**
          * Unknown uri type
          *
          * @param uri Uri
-         * @return Boolean Whether or not to consume
+         * @return If return true, this load is consumed
          */
-        boolean onLoadUri(Uri uri);
+        boolean shouldOverrideUrlLoading(String uri);
     }
 }

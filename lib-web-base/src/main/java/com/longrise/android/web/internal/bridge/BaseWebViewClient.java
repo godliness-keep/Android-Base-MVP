@@ -40,7 +40,8 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
     private WeakReference<WebCallback.WebViewClientListener> mClientCallback;
 
     private boolean mBlockImageLoad;
-    private boolean mLoadingError;
+    private boolean mLoadedError;
+    private boolean mFirstFinished = true;
 
     public final void attachTarget(T target) {
         this.mHandler = target.getHandler();
@@ -49,33 +50,51 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
     }
 
     protected final boolean isFinishing() {
-        return ActivityState.isAlive(mTarget.get());
+        final boolean isAlive = ActivityState.isAlive(mTarget.get());
+        if (!isAlive) {
+            mHandler.removeCallbacksAndMessages(null);
+        }
+        return !isAlive;
     }
 
-    protected final Handler getHandler() {
-        return mHandler;
+    protected final void post(Runnable action) {
+        postDelayed(action, 0);
+    }
+
+    protected final void postDelayed(Runnable action, int delay) {
+        if (!isFinishing()) {
+            mHandler.postDelayed(action, delay);
+        }
     }
 
     protected final WebCallback.WebViewClientListener getCallback() {
         return mClientCallback != null ? mClientCallback.get() : null;
     }
 
+    /**
+     * 1、第一次加载Url，该方法并不会被回调
+     * 2、只有页面中超链接才会回调该方法
+     * 3、window.location.href 不会调用该方法
+     */
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        MvpLog.e(TAG, "url: " + url);
-        final boolean intercept = redirectOverrideUrlLoading(view, url);
-        MvpLog.e(TAG, "intercept: " + intercept);
-        return intercept;
+        if (isFinishing()) {
+            return true;
+        }
+        if (!redirectOverrideUrlLoading(view, url)) {
+            return super.shouldOverrideUrlLoading(view, url);
+        }
+        //拦截
+        return true;
     }
 
+    /**
+     * 5.0之后执行该方法
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        final String url = request.getUrl().toString();
-        MvpLog.e(TAG, "url: " + url);
-        final boolean intercept = redirectOverrideUrlLoading(view, url);
-        MvpLog.e(TAG, "intercept: " + intercept);
-        return intercept;
+        return super.shouldOverrideUrlLoading(view, request);
     }
 
     @Override
@@ -83,35 +102,28 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
         if (isFinishing()) {
             return;
         }
-        this.mLoadingError = false;
+
+        if (mLoadedError) {
+            notifyWebViewLoadedState();
+        }
+
+        MvpLog.e(TAG, "onPageStarted");
 //        blockImageLoad(view);
     }
-
-    private boolean mFirstFinished = true;
 
     @Override
     public void onPageFinished(WebView view, String url) {
         if (isFinishing()) {
             return;
         }
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                final WebCallback.WebViewClientListener callback = getCallback();
-                if (callback != null) {
-                    if (mLoadingError) {
-                        callback.loadingError();
-                    } else {
-                        callback.loadingPage();
-                    }
-                }
-            }
-        });
+
+        notifyWebViewLoadedState();
 
         if (mFirstFinished) {
             clearForwardHistory(view);
             mFirstFinished = false;
         }
+
 //        toImageLoad(view);
     }
 
@@ -123,8 +135,8 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
         if (interceptErrorState(view, failingUrl, errorCode)) {
             return;
         }
-        this.mLoadingError = true;
-        MvpLog.e(TAG, "onReceivedError deprecated : " + errorCode);
+        this.mLoadedError = true;
+        MvpLog.e(TAG, "onReceivedError : " + errorCode);
     }
 
     /**
@@ -140,7 +152,13 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
         if (interceptErrorState(view, failingUrl, errorCode)) {
             return;
         }
-        this.mLoadingError = true;
+
+        this.mLoadedError = true;
+    }
+
+    @Override
+    public void onLoadResource(WebView view, String url) {
+        super.onLoadResource(view, url);
     }
 
     /**
@@ -152,7 +170,8 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
         //任何HTTP请求产生的错误都会回调这个方法，包括主页面的html文档请求，iframe、图片等资源请求。
         //在这个回调中，由于混杂了很多请求，不适合用来展示加载错误的页面，而适合做监控报警。
         //当某个URL，或者某个资源收到大量报警时，说明页面或资源可能存在问题，这时候可以让相关运营及时响应修改。
-        MvpLog.e(TAG, "onReceivedHttpError");
+        final int errorCode = errorResponse.getStatusCode();
+        MvpLog.e(TAG, "onReceivedHttpError: " + errorCode + " errored url: " + request.getUrl());
     }
 
     @Override
@@ -166,19 +185,6 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
 //        } else {
 //            super.onReceivedSslError(view, handler, error);
 //        }
-    }
-
-    private boolean beforeUrlLoading(String url) {
-        if (url.startsWith(SchemeConsts.HTTP)
-                || url.startsWith(SchemeConsts.HTTPS)
-                || url.startsWith(SchemeConsts.FILE)) {
-            return false;
-        }
-        final WebCallback.WebViewClientListener callback = getCallback();
-        if (callback != null) {
-            return callback.onLoadUri(Uri.parse(url));
-        }
-        return false;
     }
 
     /**
@@ -213,19 +219,27 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
 
     private boolean interceptErrorState(WebView view, String failingUrl, int errorCode) {
         if (errorCode != -8 && errorCode != -2) {
-            boolean isErrorUrl = !TextUtils.equals(failingUrl, view.getUrl()) && !TextUtils.equals(failingUrl, view.getOriginalUrl());
-            if (isErrorUrl
-                    || (failingUrl == null && errorCode != -12)
-                    || errorCode == -1) {
-                MvpLog.e(TAG, "intercept onReceivedError");
-                return true;
-            }
+            final boolean isErrorUrl = !TextUtils.equals(failingUrl, view.getUrl()) && !TextUtils.equals(failingUrl, view.getOriginalUrl());
+            final boolean error = (failingUrl == null && errorCode != -12) || (errorCode == -1);
+            return isErrorUrl || error;
+        }
+        return false;
+    }
+
+    private boolean beforeUrlLoading(String url) {
+        final WebCallback.WebViewClientListener callback = getCallback();
+        if (callback != null) {
+            //Give the outside world a chance to intercept
+            return callback.shouldOverrideUrlLoading(url);
         }
         return false;
     }
 
     private boolean redirectOverrideUrlLoading(WebView view, String url) {
-        if (TextUtils.isEmpty(url) || beforeUrlLoading(url)) {
+        final boolean intercept = beforeUrlLoading(url);
+        MvpLog.e(TAG, "intercept: " + intercept);
+        if (intercept || TextUtils.isEmpty(url) || !isKnowScheme(url)) {
+            //Unable to process Url address
             return true;
         }
         final WebView.HitTestResult hitTestResult = view.getHitTestResult();
@@ -236,15 +250,22 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
         return false;
     }
 
+    /**
+     * 应该配置在xml
+     */
+    private boolean isKnowScheme(String url) {
+        return url.startsWith(SchemeConsts.HTTP)
+                || url.startsWith(SchemeConsts.HTTPS)
+                || url.startsWith(SchemeConsts.FILE);
+    }
+
     private boolean interceptAddressType(String url) {
-        boolean intercept =
-                url.endsWith(".apk")
-                        || url.endsWith(".css")
-                        || url.endsWith(".png")
-                        || url.endsWith(".jpg")
-                        || url.endsWith(".gif")
-                        || url.endsWith(".js");
-        return intercept;
+        return url.endsWith(".apk")
+                || url.endsWith(".css")
+                || url.endsWith(".png")
+                || url.endsWith(".jpg")
+                || url.endsWith(".gif")
+                || url.endsWith(".js");
     }
 
     private void clearForwardHistory(WebView view) {
@@ -256,5 +277,22 @@ public class BaseWebViewClient<T extends BaseWebActivity> extends WebViewClient 
                 MvpLog.e(TAG, "clearForwardHistory");
             }
         }
+    }
+
+    private void notifyWebViewLoadedState() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                final WebCallback.WebViewClientListener callback = getCallback();
+                if (callback != null) {
+                    if (mLoadedError) {
+                        callback.loadedError();
+                        mLoadedError = false;
+                    } else {
+                        callback.loadedSuccess();
+                    }
+                }
+            }
+        });
     }
 }

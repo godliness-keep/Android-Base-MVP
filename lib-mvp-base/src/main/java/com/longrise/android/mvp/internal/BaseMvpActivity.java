@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 
+import com.longrise.android.mvp.internal.activitytheme.base.BaseActivityTheme;
 import com.longrise.android.mvp.internal.mvp.BasePresenter;
 import com.longrise.android.mvp.internal.mvp.BaseView;
 import com.longrise.android.mvp.utils.GenericUtil;
@@ -22,7 +23,12 @@ public abstract class BaseMvpActivity<P extends BasePresenter> extends BaseSuper
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(getLayoutResourceId(savedInstanceState));
+        final int layoutResourse = getLayoutResourceId(savedInstanceState);
+        if (layoutResourse != BaseActivityTheme.NONE) {
+            setContentView(getLayoutResourceId(savedInstanceState));
+        } else {
+            createAndInitMvpFrame();
+        }
     }
 
     @Override
@@ -101,17 +107,17 @@ public abstract class BaseMvpActivity<P extends BasePresenter> extends BaseSuper
 
     @SuppressWarnings("unchecked")
     void createAndInitMvpFrame() {
+        mContentChanged = true;
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-            if (mPresenter != null) {
-                mPresenter.attachV((BaseView) this);
-            }
+        }
+        if (mPresenter != null) {
+            mPresenter.attachV(this);
         }
         initView();
         if (mPresenter != null) {
             mPresenter.init();
         }
         regEvent(true);
-        mContentChanged = true;
     }
 }

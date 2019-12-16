@@ -36,7 +36,7 @@ public final class WebTheme extends BaseActivityTheme<BaseWebThemeActivity> impl
     private ImageButton mIvBack;
     private ImageButton mIvClose;
     private TextView mTvTitle;
-    ProgressBar mProgressBar;
+    private ProgressBar mProgressBar;
 
     private View mRightView;
     private ImageButton mIvRight;

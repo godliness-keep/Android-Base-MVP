@@ -22,17 +22,19 @@ import com.longrise.android.mvp.utils.GenericUtil;
 public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialog {
 
     protected P mPresenter;
+    private Context mContext;
     private View mDecor;
 
-    private final boolean mDebug = BuildConfig.DEBUG;
+    private static final boolean DEBUG = BuildConfig.DEBUG;
     private boolean mContentChanged;
 
     public BaseDialog(Context context) {
-        this(context, R.style.MVP_Dialog_Defalut_Style);
+        this(context, 0);
     }
 
     public BaseDialog(Context context, int theme) {
         super(context, theme);
+        this.mContext = context;
     }
 
     @Override
@@ -49,7 +51,7 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
     @Override
     public final void onContentChanged() {
         if (!mContentChanged) {
-            buildAndInitMvpFrame();
+            initMvpFrame();
             mContentChanged = true;
         }
     }
@@ -73,6 +75,10 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
      * @param regEvent boolean
      */
     protected abstract void regEvent(boolean regEvent);
+
+    protected Context getActivity(){
+        return mContext;
+    }
 
     protected void beforeSetContentView(@NonNull Window window) {
 
@@ -111,7 +117,7 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
         try {
             super.show();
         } catch (Exception e) {
-            if (mDebug) {
+            if (DEBUG) {
                 throw e;
             }
         }
@@ -122,7 +128,7 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
         try {
             super.dismiss();
         } catch (Exception e) {
-            if (mDebug) {
+            if (DEBUG) {
                 throw e;
             }
         }
@@ -136,12 +142,12 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
     }
 
     @SuppressWarnings("unchecked")
-    private void buildAndInitMvpFrame() {
+    private void initMvpFrame() {
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-            if (mPresenter != null) {
-                mPresenter.attachV((BaseView) this);
-            }
+        }
+        if (mPresenter != null) {
+            mPresenter.attachV(this);
         }
         initView();
         if (mPresenter != null) {

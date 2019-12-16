@@ -12,11 +12,11 @@ public final class ActivityState {
 
     public static boolean isAlive(Activity target) {
         if (target == null) {
-            return true;
+            return false;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return target.isFinishing() || target.isDestroyed();
+            return !target.isFinishing() || !target.isDestroyed();
         }
-        return target.isFinishing();
+        return !target.isFinishing();
     }
 }

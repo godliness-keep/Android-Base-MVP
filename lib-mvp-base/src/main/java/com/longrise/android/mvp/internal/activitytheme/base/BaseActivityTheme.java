@@ -20,7 +20,7 @@ import com.longrise.android.mvp.internal.BaseMvpActivity;
 public abstract class BaseActivityTheme<T extends BaseMvpActivity> {
 
     private static final String TAG = "BaseActivityTheme";
-    public static final int NONE = -1;
+    public static final int NONE = 0;
 
     private boolean mCached;
 

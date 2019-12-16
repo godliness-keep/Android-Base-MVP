@@ -98,7 +98,7 @@ public abstract class BaseWebThemeActivity<P extends BasePresenter> extends Base
     }
 
     @Override
-    protected final BaseWebView getWebView() {
+    public final BaseWebView getWebView() {
         if (mWebView == null) {
             mWebView = BaseWebView.createOrGetWebView(this);
         }
@@ -107,13 +107,13 @@ public abstract class BaseWebThemeActivity<P extends BasePresenter> extends Base
 
     @Override
     protected boolean webViewGoBack(boolean finish) {
-        boolean goBack = super.webViewGoBack(finish);
-        if (goBack) {
+        boolean canGoBack = super.webViewGoBack(finish);
+        if (canGoBack) {
             if (mWebTheme != null) {
                 mWebTheme.updateCloseButton();
             }
         }
-        return goBack;
+        return canGoBack;
     }
 
     @Override
@@ -141,7 +141,7 @@ public abstract class BaseWebThemeActivity<P extends BasePresenter> extends Base
     }
 
     @Override
-    public final void loadingPage() {
+    public final void loadedSuccess() {
         if (mErrorState) {
             LoadingStyleManager.dismissLoadingStyle(this);
             this.mErrorState = false;
@@ -149,7 +149,7 @@ public abstract class BaseWebThemeActivity<P extends BasePresenter> extends Base
     }
 
     @Override
-    public final void loadingError() {
+    public final void loadedError() {
         LoadingStyleManager.loadingError(this);
         this.mErrorState = true;
     }
@@ -173,17 +173,6 @@ public abstract class BaseWebThemeActivity<P extends BasePresenter> extends Base
         if (mWebTheme != null) {
             mWebTheme.detachTheme();
         }
-    }
-
-    @Override
-    protected final int getLayoutResourceId() {
-        //ignore
-        return BaseActivityTheme.NONE;
-    }
-
-    @Override
-    protected final void initView() {
-        //ignore
     }
 
     private void createWebTheme() {

@@ -3,12 +3,16 @@ package com.longrise.android.web.internal.bridge;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
+import android.webkit.ConsoleMessage;
+import android.webkit.JsPromptResult;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
+import com.longrise.android.mvp.utils.MvpLog;
 import com.longrise.android.web.BaseWebActivity;
 import com.longrise.android.web.common.SchemeConsts;
 import com.longrise.android.web.internal.webcallback.WebCallback;
@@ -40,13 +44,29 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
     }
 
     protected final boolean isFinishing() {
-        return ActivityState.isAlive(mTarget.get());
+        final boolean isAlive = ActivityState.isAlive(mTarget.get());
+        if (!isAlive) {
+            mHandler.removeCallbacksAndMessages(null);
+        }
+        return !isAlive;
     }
 
+    protected final void post(Runnable task) {
+        postDelayed(task, 0);
+    }
+
+    protected final void postDelayed(Runnable task, int delay) {
+        if (!isFinishing()) {
+            mHandler.postDelayed(task, delay);
+        }
+    }
+
+    @Nullable
     protected final WebCallback.WebChromeListener getCallback() {
         return mWebChromeCallback != null ? mWebChromeCallback.get() : null;
     }
 
+    @Nullable
     protected final T getTarget() {
         return mTarget.get();
     }
@@ -56,7 +76,7 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
         if (isFinishing()) {
             return;
         }
-        if(TextUtils.equals(title, SchemeConsts.BLANK)){
+        if (TextUtils.equals(title, SchemeConsts.BLANK)) {
             return;
         }
         mHandler.post(new Runnable() {
@@ -72,6 +92,7 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
 
     @Override
     public void onProgressChanged(WebView view, final int newProgress) {
+        MvpLog.e(TAG, "newProgress: " + newProgress);
         if (isFinishing()) {
             return;
         }
@@ -85,7 +106,7 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
             }
         });
 
-        if (mFirstLoad ) {
+        if (mFirstLoad) {
             view.clearHistory();
             mFirstLoad = false;
         }
@@ -112,7 +133,7 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
         if (isFinishing()) {
             return;
         }
-        mHandler.post(new Runnable() {
+        post(new Runnable() {
             @Override
             public void run() {
                 final T target = getTarget();
@@ -129,13 +150,13 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
     /**
      * For android version >= 5.0  todo 4.4版本是个bug无回调，需要另行约定
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public final boolean onShowFileChooser(WebView webView, final ValueCallback<Uri[]> filePathCallback, final FileChooserParams fileChooserParams) {
         if (isFinishing()) {
             return true;
         }
-        mHandler.post(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        post(new Runnable() {
             @Override
             public void run() {
                 final T target = getTarget();
@@ -148,6 +169,27 @@ public class BaseWebChromeClient<T extends BaseWebActivity> extends WebChromeCli
             }
         });
         return true;
+    }
+
+    @Override
+    public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+        if (!ActivityState.isAlive(getTarget())) {
+            try {
+                result.cancel();
+            } catch (Exception e) {
+                //ignore
+            }
+        }
+        return super.onJsPrompt(view, url, message, defaultValue, result);
+    }
+
+
+    @Override
+    public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+        if (consoleMessage != null) {
+            MvpLog.e(TAG, consoleMessage.messageLevel().name() + " : " + consoleMessage.message());
+        }
+        return super.onConsoleMessage(consoleMessage);
     }
 
     private void addWebChromeListener(WebCallback.WebChromeListener chromeListener) {
