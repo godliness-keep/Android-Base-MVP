@@ -110,9 +110,9 @@ public abstract class BaseMvpActivity<P extends BasePresenter> extends BaseSuper
         mContentChanged = true;
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-        }
-        if (mPresenter != null) {
-            mPresenter.attachV(this);
+            if (mPresenter != null) {
+                mPresenter.attachV((BaseView) this);
+            }
         }
         initView();
         if (mPresenter != null) {

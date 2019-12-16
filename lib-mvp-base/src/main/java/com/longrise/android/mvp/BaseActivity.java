@@ -19,7 +19,7 @@ import com.longrise.android.mvp.internal.mvp.BasePresenter;
  * Created by godliness on 2019-07-02.
  *
  * @author godliness
- * NOTE:Provides a standard style of Activity, If not need, please @see BaseMvpActivity
+ * Standard style activities
  */
 public abstract class BaseActivity<P extends BasePresenter> extends BaseMvpActivity<P> implements IActivityThemeListener, ILoadStyleListener {
 

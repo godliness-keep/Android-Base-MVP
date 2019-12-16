@@ -86,7 +86,7 @@ public abstract class BaseWebActivity<P extends BasePresenter> extends BaseMvpAc
      */
     @Override
     public boolean shouldOverrideUrlLoading(String url) {
-        MvpLog.e(TAG, "uri: " + url);
+        MvpLog.e(TAG, "url: " + url);
         return false;
     }
 

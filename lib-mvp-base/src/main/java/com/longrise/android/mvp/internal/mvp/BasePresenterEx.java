@@ -17,7 +17,7 @@ public abstract class BasePresenterEx<V extends BaseView, M extends BaseModel> e
 
     @Override
     public final void init() {
-        exInit();
+        extendInit();
 
         if (mModal != null) {
             mModal.init();
@@ -27,5 +27,5 @@ public abstract class BasePresenterEx<V extends BaseView, M extends BaseModel> e
     /**
      * The BasePresenterEx is initialized
      */
-    protected abstract void exInit();
+    protected abstract void extendInit();
 }

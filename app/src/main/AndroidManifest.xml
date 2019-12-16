@@ -10,19 +10,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name="com.godliness.mvp.SampleActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name="com.godliness.mvp.sample.LoginPresenterActivity" />
-
-        <activity android:name="com.godliness.mvp.sample.LoginPresenterExActivity" />
-
-        <activity android:name="com.godliness.mvp.sample.LoginThemeActivity"/>
-
     </application>
 
 </manifest>

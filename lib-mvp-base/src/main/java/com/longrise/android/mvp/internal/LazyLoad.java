@@ -6,6 +6,7 @@ import java.util.LinkedList;
  * Created by godliness on 2019-07-04.
  *
  * @author godliness
+ * Assist Fragment to complete lazy loading
  */
 public final class LazyLoad {
 

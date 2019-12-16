@@ -20,6 +20,7 @@ import com.longrise.android.web.internal.theme.WebTheme;
  * Created by godliness on 2019-07-09.
  *
  * @author godliness
+ * Standard style web-page activities
  */
 public abstract class BaseWebThemeActivity<P extends BasePresenter> extends BaseWebActivity<P> implements IWebThemeListener, ILoadStyleListener {
 

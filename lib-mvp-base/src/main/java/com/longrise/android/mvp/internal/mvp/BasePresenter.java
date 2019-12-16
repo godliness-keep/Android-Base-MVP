@@ -41,7 +41,7 @@ public abstract class BasePresenter<V extends BaseView> {
 
     public final void attachV(V v) {
         this.mView = v;
-        if (v instanceof Activity) {
+        if (v instanceof Context) {
             this.mContext = (Context) v;
         }
     }

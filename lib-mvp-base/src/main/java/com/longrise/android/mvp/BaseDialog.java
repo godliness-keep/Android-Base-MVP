@@ -76,7 +76,7 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
      */
     protected abstract void regEvent(boolean regEvent);
 
-    protected Context getActivity(){
+    protected Context getActivity() {
         return mContext;
     }
 
@@ -145,9 +145,9 @@ public abstract class BaseDialog<P extends BasePresenter> extends AppCompatDialo
     private void initMvpFrame() {
         if (this instanceof BaseView) {
             mPresenter = GenericUtil.getT(this, 0);
-        }
-        if (mPresenter != null) {
-            mPresenter.attachV(this);
+            if (mPresenter != null) {
+                mPresenter.attachV((BaseView) this);
+            }
         }
         initView();
         if (mPresenter != null) {
