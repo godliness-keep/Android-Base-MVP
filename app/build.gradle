@@ -24,4 +24,5 @@ dependencies {
 
     implementation project(":lib-mvp-base")
     implementation project(":lib-web-base")
+    implementation project(":lib-common-utils")
 }
